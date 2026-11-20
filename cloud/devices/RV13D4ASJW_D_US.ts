@@ -101,6 +101,8 @@ const OPT2_ENERGY_SAVER_AUTO = 0x80
 // set this bit (nothing else in the record moved; the cloud reports no field for it).
 const OPT3_OFFSET = 17
 const OPT3_AI = 0x04
+// rec[18:20], big-endian: energy used so far by the running cycle, in Wh.
+const SPENT_POWER_OFFSET = 18
 // rec[23]: the load-item step code, matching the cloud's loadItem (LOADITEM_OFF/2/5 seen as 0x00/0x02/0x05).
 // The panel displays an item count for each step (1 -> 7, 2 -> 9, 3 -> 11, 4 -> 14, 5 -> 16, 6 -> 18); the
 // code is published as-is, like the siblings do.
@@ -393,6 +395,16 @@ export default class Device extends AABBDevice {
                         device_class: 'duration',
                         unit_of_measurement: 'min',
                         entity_category: 'diagnostic',
+                    },
+                    energy: {
+                        platform: 'sensor',
+                        unique_id: '$deviceid-energy',
+                        state_topic: '$this/energy',
+                        name: 'Energy',
+                        icon: 'mdi:lightning-bolt',
+                        device_class: 'energy',
+                        unit_of_measurement: 'Wh',
+                        state_class: 'total_increasing',
                     },
                     dry_level: {
                         platform: 'sensor',
@@ -864,6 +876,7 @@ export default class Device extends AABBDevice {
             'initial_time',
             isOff ? 0 : rec[INITIAL_TIME_HOUR_OFFSET] * 60 + rec[INITIAL_TIME_MIN_OFFSET],
         )
+        this.publishProperty('energy', rec.readUInt16BE(SPENT_POWER_OFFSET))
         this.publishProperty('dry_level', DRY_LEVELS.map(rec[DRY_LEVEL_OFFSET]))
         this.publishProperty('temp', TEMPERATURES.map(rec[TEMP_OFFSET]))
         this.publishProperty(

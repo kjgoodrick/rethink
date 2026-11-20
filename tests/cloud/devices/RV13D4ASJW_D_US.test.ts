@@ -151,6 +151,11 @@ const PAUSED_TOWELS = buf(
 )
 const RESUME_APPLY_WRINKLE_CARE_HEX = 'aa1bf026020000040000001001000200000000030000000000a2bb'
 
+// Real DLEX4000B frame from a Bedding cycle: rec[18:20] is 0x031e = 798 Wh.
+const BEDDING_ENERGY = buf(
+    'aa4030ec001b320032010507000503000000000000a90002dd0100000064000000001b320031010507000503000000000000a900031e01000000640000001cbb',
+)
+
 function makeDevice() {
     const ha = new MockHAConnection()
     const thinq = new MockThinq2Device(DEVICE_ID, META)
@@ -180,6 +185,9 @@ const WRINKLE_CARE_POWERED_OFF = buf(
     'aa4030ec001b380001013703000304000400000010ab0000180400000073000000001b000001000100000000000400000040a80000183800000073000000e3bb',
 )
 describe('RV13D4ASJW_D_US', () => {
+    test('cycle energy is the big-endian rec[18:20] value', () => {
+        assert.equal(feed([BEDDING_ENERGY]).energy, 798)
+    })
     test('0xEB single-record frame after power-on decodes with the 0xEC offsets', () => {
         const p = feed([EB_INITIAL_POWER_ON])
         assert.equal(p.power, 'ON')
